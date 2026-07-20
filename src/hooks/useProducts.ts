@@ -18,12 +18,20 @@ export function useProducts(opts: { includeInactive?: boolean } = {}) {
       return data.map((p: any) => ({
         ...p,
         price: Number(p.price),
-        variants: Array.isArray(p.variants) ? p.variants : [],
+        variants: normalizeVariants(p.variants),
         images: Array.isArray(p.images) ? p.images : [],
       }));
     },
   });
 }
+
+const normalizeVariants = (variants: any[]) => {
+  if (!Array.isArray(variants)) return [];
+  return variants.map((v) => ({
+    name: v.name,
+    values: (v.values || []).map((val: any) => (typeof val === "string" ? { value: val } : val)),
+  }));
+};
 
 export function useProduct(slug: string | undefined) {
   return useQuery({
@@ -41,7 +49,7 @@ export function useProduct(slug: string | undefined) {
       return {
         ...(data as any),
         price: Number((data as any).price),
-        variants: Array.isArray((data as any).variants) ? (data as any).variants : [],
+        variants: normalizeVariants((data as any).variants),
         images: Array.isArray((data as any).images) ? (data as any).images : [],
       } as Product;
     },

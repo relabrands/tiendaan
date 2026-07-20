@@ -26,7 +26,15 @@ const ProductDetail = () => {
       toast.error("Selecciona todas las opciones");
       return;
     }
-    const selectedOptions = options.map((o) => ({ name: o.name, value: selected[o.name] }));
+    const selectedOptions = options.map((o) => {
+      const selectedValue = selected[o.name];
+      const variantValObj = o.values.find(v => v.value === selectedValue);
+      return { 
+        name: o.name, 
+        value: selectedValue,
+        title: variantValObj?.title
+      };
+    });
     addItem({ product, quantity: 1, selectedOptions });
     toast.success("Añadido al carrito", { description: product.title, position: "top-center" });
   };
@@ -100,12 +108,12 @@ const ProductDetail = () => {
                       {option.name}
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {option.values.map((value) => {
-                        const active = selected[option.name] === value;
+                      {option.values.map((vobj) => {
+                        const active = selected[option.name] === vobj.value;
                         return (
                           <button
-                            key={value}
-                            onClick={() => setSelected((s) => ({ ...s, [option.name]: value }))}
+                            key={vobj.value}
+                            onClick={() => setSelected((s) => ({ ...s, [option.name]: vobj.value }))}
                             className={cn(
                               "rounded-md border px-4 py-2 text-sm font-semibold transition-all",
                               active
@@ -113,7 +121,7 @@ const ProductDetail = () => {
                                 : "border-border/60 bg-card/40 text-foreground hover:border-accent/50",
                             )}
                           >
-                            {value}
+                            {vobj.value}
                           </button>
                         );
                       })}

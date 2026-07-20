@@ -295,20 +295,21 @@ const AdminPanel = () => {
                   type="button" 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setForm({ ...form, variants: [...form.variants, { name: "", values: [] }] })}
+                  onClick={() => setForm({ ...form, variants: [...form.variants, { name: "", values: [{ value: "", title: "" }] }] })}
                 >
-                  <Plus className="mr-1 h-3 w-3" /> Añadir variante
+                  <Plus className="mr-1 h-3 w-3" /> Añadir grupo
                 </Button>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {form.variants.length === 0 && (
                   <p className="text-sm text-muted-foreground">Sin variantes configuradas.</p>
                 )}
                 {form.variants.map((v, i) => (
-                  <div key={i} className="flex gap-2 items-start rounded-md border border-border/40 p-3 bg-muted/20">
-                    <div className="flex-1 space-y-2">
+                  <div key={i} className="rounded-md border border-border/40 p-3 bg-muted/10 space-y-3">
+                    <div className="flex gap-2 items-center">
                       <Input 
-                        placeholder="Nombre (ej. Talla)" 
+                        className="font-bold bg-background"
+                        placeholder="Nombre de la Variante (ej. Talla, Color)" 
                         value={v.name}
                         onChange={(e) => {
                           const newVariants = [...form.variants];
@@ -316,29 +317,73 @@ const AdminPanel = () => {
                           setForm({ ...form, variants: newVariants });
                         }}
                       />
-                      <Input 
-                        placeholder="Valores separados por coma (S, M, L)" 
-                        value={v.values.join(", ")}
-                        onChange={(e) => {
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => {
                           const newVariants = [...form.variants];
-                          newVariants[i].values = e.target.value.split(",").map(val => val.trim()).filter(Boolean);
+                          newVariants.splice(i, 1);
                           setForm({ ...form, variants: newVariants });
                         }}
-                      />
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="icon" 
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => {
-                        const newVariants = [...form.variants];
-                        newVariants.splice(i, 1);
-                        setForm({ ...form, variants: newVariants });
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+
+                    <div className="pl-4 border-l-2 border-border/40 space-y-2">
+                      <Label className="text-xs text-muted-foreground">Opciones</Label>
+                      {v.values.map((val, j) => (
+                        <div key={j} className="flex gap-2 items-start">
+                          <Input 
+                            className="bg-background"
+                            placeholder="Valor (ej. Azul Marino)" 
+                            value={val.value}
+                            onChange={(e) => {
+                              const newVariants = [...form.variants];
+                              newVariants[i].values[j].value = e.target.value;
+                              setForm({ ...form, variants: newVariants });
+                            }}
+                          />
+                          <Input 
+                            className="bg-background"
+                            placeholder="Título opcional (ej. Gorra Almuerzo...)" 
+                            value={val.title || ""}
+                            onChange={(e) => {
+                              const newVariants = [...form.variants];
+                              newVariants[i].values[j].title = e.target.value;
+                              setForm({ ...form, variants: newVariants });
+                            }}
+                          />
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => {
+                              const newVariants = [...form.variants];
+                              newVariants[i].values.splice(j, 1);
+                              setForm({ ...form, variants: newVariants });
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 opacity-50 hover:opacity-100" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => {
+                          const newVariants = [...form.variants];
+                          newVariants[i].values.push({ value: "", title: "" });
+                          setForm({ ...form, variants: newVariants });
+                        }}
+                      >
+                        <Plus className="mr-1 h-3 w-3" /> Añadir valor
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

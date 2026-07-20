@@ -4,9 +4,14 @@ import gorraImg from "@/assets/product-gorra.jpg";
 import hoodieImg from "@/assets/product-hoodie.jpg";
 import termoImg from "@/assets/product-termo.jpg";
 
+export interface VariantValue {
+  value: string;
+  title?: string;
+}
+
 export interface VariantOption {
   name: string;
-  values: string[];
+  values: VariantValue[];
 }
 
 export interface Product {

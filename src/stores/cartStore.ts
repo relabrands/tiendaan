@@ -11,7 +11,7 @@ export interface CartItem {
   price: number;
   currency: string;
   variantLabel: string; // e.g. "Talla: M" or ""
-  selectedOptions: Array<{ name: string; value: string }>;
+  selectedOptions: Array<{ name: string; value: string; title?: string }>;
   quantity: number;
 }
 
@@ -20,14 +20,14 @@ interface CartStore {
   addItem: (input: {
     product: Product;
     quantity?: number;
-    selectedOptions?: Array<{ name: string; value: string }>;
+    selectedOptions?: Array<{ name: string; value: string; title?: string }>;
   }) => void;
   updateQuantity: (key: string, quantity: number) => void;
   removeItem: (key: string) => void;
   clearCart: () => void;
 }
 
-function makeKey(productId: string, options: Array<{ name: string; value: string }>) {
+function makeKey(productId: string, options: Array<{ name: string; value: string; title?: string }>) {
   const suffix = options.map((o) => `${o.name}:${o.value}`).join("|");
   return suffix ? `${productId}__${suffix}` : productId;
 }
@@ -58,7 +58,7 @@ export const useCartStore = create<CartStore>()(
               image_url: product.image_url,
               price: product.price,
               currency: product.currency,
-              variantLabel: selectedOptions.map((o) => `${o.name}: ${o.value}`).join(" · "),
+              variantLabel: selectedOptions.map((o) => o.title ? o.title : `${o.name}: ${o.value}`).join(" · "),
               selectedOptions,
               quantity,
             },
