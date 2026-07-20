@@ -335,10 +335,10 @@ const AdminPanel = () => {
                     <div className="pl-4 border-l-2 border-border/40 space-y-2">
                       <Label className="text-xs text-muted-foreground">Opciones</Label>
                       {v.values.map((val, j) => (
-                        <div key={j} className="flex gap-2 items-start">
+                        <div key={j} className="flex gap-2 items-start flex-wrap sm:flex-nowrap">
                           <Input 
-                            className="bg-background"
-                            placeholder="Valor (ej. Azul Marino)" 
+                            className="bg-background min-w-[120px] flex-1"
+                            placeholder="Valor (ej. Azul)" 
                             value={val.value}
                             onChange={(e) => {
                               const newVariants = [...form.variants];
@@ -347,12 +347,22 @@ const AdminPanel = () => {
                             }}
                           />
                           <Input 
-                            className="bg-background"
-                            placeholder="Título opcional (ej. Gorra Almuerzo...)" 
+                            className="bg-background min-w-[120px] flex-1"
+                            placeholder="Título opcional" 
                             value={val.title || ""}
                             onChange={(e) => {
                               const newVariants = [...form.variants];
                               newVariants[i].values[j].title = e.target.value;
+                              setForm({ ...form, variants: newVariants });
+                            }}
+                          />
+                          <Input 
+                            className="bg-background min-w-[120px] flex-1"
+                            placeholder="URL Imagen opcional" 
+                            value={val.image_url || ""}
+                            onChange={(e) => {
+                              const newVariants = [...form.variants];
+                              newVariants[i].values[j].image_url = e.target.value;
                               setForm({ ...form, variants: newVariants });
                             }}
                           />

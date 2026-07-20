@@ -20,6 +20,12 @@ const ProductDetail = () => {
   const allSelected = options.every((o) => selected[o.name]);
   const outOfStock = (product?.stock ?? 0) <= 0;
 
+  const selectedImage = options
+    .flatMap((o) => o.values)
+    .find((v) => Object.values(selected).includes(v.value) && v.image_url)?.image_url;
+
+  const displayImage = selectedImage || (product ? getProductImage(product) : "/placeholder.svg");
+
   const handleAdd = () => {
     if (!product) return;
     if (options.length > 0 && !allSelected) {
@@ -35,7 +41,8 @@ const ProductDetail = () => {
         title: variantValObj?.title
       };
     });
-    addItem({ product, quantity: 1, selectedOptions });
+    const productToAdd = selectedImage ? { ...product, image_url: selectedImage } : product;
+    addItem({ product: productToAdd, quantity: 1, selectedOptions });
     toast.success("Añadido al carrito", { description: product.title, position: "top-center" });
   };
 
@@ -72,7 +79,7 @@ const ProductDetail = () => {
               <div className="space-y-4">
                 <div className="overflow-hidden rounded-md border border-border/60 bg-card-gradient">
                   <img
-                    src={getProductImage(product)}
+                    src={displayImage}
                     alt={product.title}
                     width={1024}
                     height={1024}

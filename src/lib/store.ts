@@ -7,6 +7,7 @@ import termoImg from "@/assets/product-termo.jpg";
 export interface VariantValue {
   value: string;
   title?: string;
+  image_url?: string;
 }
 
 export interface VariantOption {
