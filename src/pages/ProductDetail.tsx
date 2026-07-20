@@ -20,11 +20,12 @@ const ProductDetail = () => {
   const allSelected = options.every((o) => selected[o.name]);
   const outOfStock = (product?.stock ?? 0) <= 0;
 
-  const selectedImage = options
+  const selectedVariant = options
     .flatMap((o) => o.values)
-    .find((v) => Object.values(selected).includes(v.value) && v.image_url)?.image_url;
+    .find((v) => Object.values(selected).includes(v.value) && (v.image_url || v.title));
 
-  const displayImage = selectedImage || (product ? getProductImage(product) : "/placeholder.svg");
+  const displayImage = selectedVariant?.image_url || (product ? getProductImage(product) : "/placeholder.svg");
+  const displayTitle = selectedVariant?.title || product?.title || "";
 
   const handleAdd = () => {
     if (!product) return;
@@ -41,7 +42,9 @@ const ProductDetail = () => {
         title: variantValObj?.title
       };
     });
-    const productToAdd = selectedImage ? { ...product, image_url: selectedImage } : product;
+    const productToAdd = selectedVariant?.image_url 
+      ? { ...product, image_url: selectedVariant.image_url } 
+      : product;
     addItem({ product: productToAdd, quantity: 1, selectedOptions });
     toast.success("Añadido al carrito", { description: product.title, position: "top-center" });
   };
@@ -93,7 +96,7 @@ const ProductDetail = () => {
                   <span className="eyebrow mb-3">{product.product_type}</span>
                 )}
                 <h1 className="font-display text-4xl font-extrabold leading-tight md:text-5xl">
-                  {product.title}
+                  {displayTitle}
                 </h1>
 
                 <div className="mt-4 flex items-baseline gap-3">
