@@ -30,6 +30,7 @@ interface ProductForm {
   variants: VariantOption[];
   stock: number;
   is_active: boolean;
+  is_customizable: boolean;
   sort_order: number;
 }
 
@@ -43,6 +44,7 @@ const emptyForm: ProductForm = {
   variants: [],
   stock: 0,
   is_active: true,
+  is_customizable: false,
   sort_order: 0,
 };
 
@@ -106,6 +108,7 @@ const AdminPanel = () => {
       variants: p.variants || [],
       stock: p.stock,
       is_active: p.is_active,
+      is_customizable: p.is_customizable || false,
       sort_order: p.sort_order,
     });
     setDialogOpen(true);
@@ -124,6 +127,7 @@ const AdminPanel = () => {
       variants: form.variants as any,
       stock: form.stock,
       is_active: form.is_active,
+      is_customizable: form.is_customizable,
       sort_order: form.sort_order,
     };
     try {
@@ -398,9 +402,15 @@ const AdminPanel = () => {
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
-              <Label className="cursor-pointer">Publicado en la tienda</Label>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+              <div className="flex items-center gap-3">
+                <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
+                <Label className="cursor-pointer">Publicado en la tienda</Label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch checked={form.is_customizable} onCheckedChange={(v) => setForm({ ...form, is_customizable: v })} />
+                <Label className="cursor-pointer">Permite nombre personalizado</Label>
+              </div>
             </div>
           </div>
           <DialogFooter>

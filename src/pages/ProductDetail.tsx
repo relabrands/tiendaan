@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Loader2, ShieldCheck, ShoppingBag, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useProduct } from "@/hooks/useProducts";
@@ -15,6 +17,7 @@ const ProductDetail = () => {
   const { data: product, isLoading } = useProduct(slug);
   const addItem = useCartStore((s) => s.addItem);
   const [selected, setSelected] = useState<Record<string, string>>({});
+  const [customText, setCustomText] = useState("");
 
   const options = product?.variants || [];
   const allSelected = options.every((o) => selected[o.name]);
@@ -42,6 +45,14 @@ const ProductDetail = () => {
         title: variantValObj?.title
       };
     });
+
+    if (product.is_customizable && customText.trim()) {
+      selectedOptions.push({
+        name: "Personalización",
+        value: customText.trim(),
+      });
+    }
+
     const productToAdd = selectedVariant?.image_url 
       ? { ...product, image_url: selectedVariant.image_url } 
       : product;
@@ -138,6 +149,21 @@ const ProductDetail = () => {
                     </div>
                   </div>
                 ))}
+
+                {product.is_customizable && (
+                  <div className="mt-8">
+                    <Label htmlFor="customText" className="mb-3 block text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                      Nombre a personalizar (opcional)
+                    </Label>
+                    <Input 
+                      id="customText" 
+                      placeholder="Ej. Robinson" 
+                      value={customText}
+                      onChange={(e) => setCustomText(e.target.value)}
+                      className="max-w-xs"
+                    />
+                  </div>
+                )}
 
                 <div className="mt-10 flex flex-col gap-3">
                   <Button onClick={handleAdd} variant="hero" size="lg" disabled={outOfStock}>

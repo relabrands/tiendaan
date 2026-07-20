@@ -19,16 +19,17 @@ export interface Product {
   id: string;
   slug: string;
   title: string;
-  description: string;
-  product_type: string;
+  description: string | null;
+  product_type: string | null;
   price: number;
   currency: string;
   image_url: string | null;
   images: string[];
-  variants: VariantOption[];
   stock: number;
   is_active: boolean;
   sort_order: number;
+  variants: VariantOption[];
+  is_customizable?: boolean;
   created_at: string;
   updated_at: string;
 }
