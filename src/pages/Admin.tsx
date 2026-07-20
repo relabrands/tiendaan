@@ -11,7 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { db, auth } from "@/lib/firebase";
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, orderBy } from "firebase/firestore";
+import { signOut } from "firebase/auth";
 import { useAuth } from "@/hooks/useAuth";
 import { useProducts } from "@/hooks/useProducts";
 import { formatPrice, slugify, type Product, type VariantOption } from "@/lib/store";
@@ -69,7 +71,7 @@ const Admin = () => {
         <p className="max-w-md text-muted-foreground">
           Tu cuenta no tiene permisos de administrador. Contacta al administrador para que te asigne acceso.
         </p>
-        <Button variant="outline" onClick={() => supabase.auth.signOut().then(() => navigate("/auth"))}>
+        <Button variant="outline" onClick={() => signOut(auth).then(() => navigate("/auth"))}>
           <LogOut className="mr-2 h-4 w-4" /> Cerrar sesión
         </Button>
       </div>
@@ -150,27 +152,35 @@ const AdminPanel = () => {
       is_active: form.is_active,
       sort_order: form.sort_order,
     };
-    const q = form.id
-      ? supabase.from("products").update(payload).eq("id", form.id)
-      : supabase.from("products").insert(payload);
-    const { error } = await q;
-    setSaving(false);
-    if (error) return toast.error("Error al guardar", { description: error.message });
-    toast.success(form.id ? "Producto actualizado" : "Producto creado");
-    setDialogOpen(false);
-    qc.invalidateQueries({ queryKey: ["products"] });
+    try {
+      if (form.id) {
+        await updateDoc(doc(db, "products", form.id), payload);
+      } else {
+        await addDoc(collection(db, "products"), payload);
+      }
+      setSaving(false);
+      toast.success(form.id ? "Producto actualizado" : "Producto creado");
+      setDialogOpen(false);
+      qc.invalidateQueries({ queryKey: ["products"] });
+    } catch (error: any) {
+      setSaving(false);
+      toast.error("Error al guardar", { description: error.message });
+    }
   };
 
   const remove = async (id: string) => {
     if (!confirm("¿Eliminar este producto?")) return;
-    const { error } = await supabase.from("products").delete().eq("id", id);
-    if (error) return toast.error("Error", { description: error.message });
-    toast.success("Producto eliminado");
-    qc.invalidateQueries({ queryKey: ["products"] });
+    try {
+      await deleteDoc(doc(db, "products", id));
+      toast.success("Producto eliminado");
+      qc.invalidateQueries({ queryKey: ["products"] });
+    } catch (error: any) {
+      toast.error("Error", { description: error.message });
+    }
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    await signOut(auth);
     navigate("/auth");
   };
 
@@ -340,11 +350,9 @@ const OrdersTab = () => {
   const { data: orders, isLoading } = useQuery({
     queryKey: ["orders"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*, order_items(id, product_title, variant_label, unit_price, quantity)")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
+      const q = query(collection(db, "orders"), orderBy("created_at", "desc"));
+      const snap = await getDocs(q);
+      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       return data as unknown as OrderRow[];
     },
   });
@@ -352,10 +360,13 @@ const OrdersTab = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const updateStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from("orders").update({ status }).eq("id", id);
-    if (error) return toast.error("Error", { description: error.message });
-    toast.success("Estado actualizado");
-    qc.invalidateQueries({ queryKey: ["orders"] });
+    try {
+      await updateDoc(doc(db, "orders", id), { status });
+      toast.success("Estado actualizado");
+      qc.invalidateQueries({ queryKey: ["orders"] });
+    } catch (error: any) {
+      toast.error("Error", { description: error.message });
+    }
   };
 
   const totalRevenue = useMemo(

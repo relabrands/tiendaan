@@ -5,42 +5,50 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate("/admin");
-    });
-  }, [navigate]);
+    if (user && !authLoading) {
+      navigate("/admin");
+    }
+  }, [user, authLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) return toast.error("No se pudo iniciar sesión", { description: error.message });
-    toast.success("Bienvenido");
-    navigate("/admin");
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      toast.success("Bienvenido");
+      navigate("/admin");
+    } catch (error: any) {
+      toast.error("No se pudo iniciar sesión", { description: error.message });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: `${window.location.origin}/admin` },
-    });
-    setLoading(false);
-    if (error) return toast.error("No se pudo registrar", { description: error.message });
-    toast.success("Cuenta creada", { description: "Ya puedes iniciar sesión." });
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      toast.success("Cuenta creada", { description: "Has iniciado sesión exitosamente." });
+      navigate("/admin");
+    } catch (error: any) {
+      toast.error("No se pudo registrar", { description: error.message });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

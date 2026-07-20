@@ -1,16 +1,20 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import type { Product } from "@/lib/store";
 
 export function useProducts(opts: { includeInactive?: boolean } = {}) {
   return useQuery({
     queryKey: ["products", opts.includeInactive ?? false],
     queryFn: async (): Promise<Product[]> => {
-      let query = supabase.from("products").select("*").order("sort_order", { ascending: true });
-      if (!opts.includeInactive) query = query.eq("is_active", true);
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []).map((p: any) => ({
+      let q = query(collection(db, "products"), orderBy("sort_order", "asc"));
+      if (!opts.includeInactive) {
+        q = query(collection(db, "products"), where("is_active", "==", true), orderBy("sort_order", "asc"));
+      }
+      const querySnapshot = await getDocs(q);
+      const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      return data.map((p: any) => ({
         ...p,
         price: Number(p.price),
         variants: Array.isArray(p.variants) ? p.variants : [],
@@ -25,9 +29,14 @@ export function useProduct(slug: string | undefined) {
     queryKey: ["product", slug],
     enabled: !!slug,
     queryFn: async (): Promise<Product | null> => {
-      const { data, error } = await supabase.from("products").select("*").eq("slug", slug!).maybeSingle();
-      if (error) throw error;
-      if (!data) return null;
+      const q = query(collection(db, "products"), where("slug", "==", slug));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) return null;
+      
+      const doc = querySnapshot.docs[0];
+      const data = { id: doc.id, ...doc.data() };
+      
       return {
         ...(data as any),
         price: Number((data as any).price),
