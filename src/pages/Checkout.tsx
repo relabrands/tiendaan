@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, BadgeCheck, Briefcase, CheckCircle2, Loader2, Lock, MessageCircle, Package, Sparkles } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Briefcase, CheckCircle2, Loader2, Lock, MessageCircle, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -135,7 +135,7 @@ const Checkout = () => {
                   <span className="eyebrow text-accent">Finalizar pedido</span>
                 </div>
                 <h1 className="font-display text-4xl font-extrabold md:text-5xl">
-                  Un paso más hacia tu mejor negocio.
+                  Lleva el Almuerzo de Negocios contigo.
                 </h1>
               </div>
             </div>
@@ -246,10 +246,7 @@ const Checkout = () => {
                   {submitting ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
-                    <>
-                      <Sparkles className="mr-2 h-5 w-5" />
-                      Confirmar pedido
-                    </>
+                    "Confirmar pedido"
                   )}
                 </Button>
 
