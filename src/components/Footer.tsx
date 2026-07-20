@@ -53,13 +53,15 @@ export const Footer = () => {
             </h4>
             <div className="flex gap-3">
               {[
-                { Icon: Instagram, label: "Instagram" },
-                { Icon: Youtube, label: "YouTube" },
-                { Icon: Music, label: "Spotify" },
-              ].map(({ Icon, label }) => (
+                { Icon: Instagram, label: "Instagram", url: "https://www.instagram.com/almuerzodenegocios/?hl=es" },
+                { Icon: Youtube, label: "YouTube", url: "https://www.youtube.com/@TheAlmuerzo/" },
+                { Icon: Music, label: "Spotify", url: "https://open.spotify.com/show/20B7XgbxhXs7APAHRfKT5H" },
+              ].map(({ Icon, label, url }) => (
                 <a
                   key={label}
-                  href="#"
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="flex h-9 w-9 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition-all hover:border-accent hover:text-accent"
                 >

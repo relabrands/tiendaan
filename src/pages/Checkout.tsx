@@ -117,7 +117,7 @@ const Checkout = () => {
                     <Input id="name" required value={form.customer_name} onChange={(e) => setForm({ ...form, customer_name: e.target.value })} />
                   </div>
                   <div>
-                    <Label htmlFor="phone">Teléfono *</Label>
+                    <Label htmlFor="phone">Teléfono / WhatsApp *</Label>
                     <Input id="phone" required value={form.customer_phone} onChange={(e) => setForm({ ...form, customer_phone: e.target.value })} />
                   </div>
                 </div>

@@ -114,9 +114,6 @@ const ProductDetail = () => {
                   <span className="font-display text-3xl font-bold text-accent">
                     {formatPrice(product.price, product.currency)}
                   </span>
-                  <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Impuestos incluidos
-                  </span>
                 </div>
 
                 {product.description && (
