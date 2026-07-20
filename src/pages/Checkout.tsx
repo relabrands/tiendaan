@@ -135,7 +135,7 @@ const Checkout = () => {
                   <span className="eyebrow text-accent">Finalizar pedido</span>
                 </div>
                 <h1 className="font-display text-4xl font-extrabold md:text-5xl">
-                  Lleva el Almuerzo de Negocios contigo.
+                  Ya casi es tuyo.
                 </h1>
               </div>
             </div>
@@ -307,7 +307,7 @@ const Checkout = () => {
                       {[
                         { icon: MessageCircle, title: "Coordinación por WhatsApp", desc: "Te contactamos al recibir tu pedido" },
                         { icon: Package, title: "Envío a toda RD", desc: "Entrega estimada 2–7 días hábiles" },
-                        { icon: BadgeCheck, title: "Compra 100% confiable", desc: "El Almuerzo de Negocios te respalda" },
+                        { icon: BadgeCheck, title: "Compra 100% confiable", desc: "Almuerzo de Negocios te respalda" },
                       ].map(({ icon: Icon, title, desc }) => (
                         <div key={title} className="flex items-start gap-3">
                           <Icon className="mt-0.5 h-4 w-4 shrink-0 text-accent" />

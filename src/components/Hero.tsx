@@ -16,7 +16,7 @@ export const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
       </div>
 
-      <div className="container-tight relative z-10 py-20 md:py-32 lg:py-40">
+      <div className="container-tight relative z-10 py-16 md:py-28 lg:py-36">
         <div className="max-w-4xl animate-fade-up">
           <div className="eyebrow mb-6">
             <span className="relative flex h-2 w-2">
@@ -26,16 +26,16 @@ export const Hero = () => {
             Tienda Oficial · Almuerzo de Negocios
           </div>
 
-          <h1 className="font-display text-5xl font-extrabold leading-[0.95] tracking-tight text-balance md:text-7xl lg:text-[5.5rem]">
+          <h1 className="font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-balance sm:text-5xl md:text-7xl lg:text-[5.5rem]">
             Equípate como{" "}
             <span className="relative inline-block">
               <span className="relative z-10 text-accent">se hacen negocios</span>
-              <span className="absolute inset-x-0 bottom-1 h-3 -z-0 bg-accent/15 blur-sm md:bottom-2 md:h-5" />
+              <span className="absolute inset-x-0 bottom-1 h-2 -z-0 bg-accent/15 blur-sm md:bottom-2 md:h-4" />
             </span>
             .
           </h1>
 
-          <p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg md:mt-8 md:text-xl">
             Merch oficial del podcast más escuchado por la nueva generación de líderes,
             emprendedores y tomadores de decisión. Diseñado con la misma obsesión que ponemos en
             cada episodio.
