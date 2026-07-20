@@ -8,14 +8,16 @@ export function useProducts(opts: { includeInactive?: boolean } = {}) {
     queryKey: ["products", opts.includeInactive ?? false],
     retry: false,
     queryFn: async (): Promise<Product[]> => {
-      let q = query(collection(db, "products"), orderBy("sort_order", "asc"));
-      if (!opts.includeInactive) {
-        q = query(collection(db, "products"), where("is_active", "==", true), orderBy("sort_order", "asc"));
-      }
+      const q = query(collection(db, "products"), orderBy("sort_order", "asc"));
       const querySnapshot = await getDocs(q);
       const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
-      return data.map((p: any) => ({
+      let filteredData = data;
+      if (!opts.includeInactive) {
+        filteredData = data.filter((p: any) => p.is_active === true);
+      }
+      
+      return filteredData.map((p: any) => ({
         ...p,
         price: Number(p.price),
         variants: normalizeVariants(p.variants),
