@@ -9,7 +9,8 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useCartStore } from "@/stores/cartStore";
 import { formatPrice, getProductImage } from "@/lib/store";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { toast } from "sonner";
 
 const Checkout = () => {
@@ -34,25 +35,27 @@ const Checkout = () => {
     if (items.length === 0) return;
     setSubmitting(true);
     try {
-      const { data: order, error: orderErr } = await supabase
-        .from("orders")
-        .insert({ ...form, subtotal, currency })
-        .select("id")
-        .single();
-      if (orderErr) throw orderErr;
-
       const orderItems = items.map((i) => ({
-        order_id: order.id,
+        id: crypto.randomUUID(), // Just to have a unique ID for React keys if needed
         product_id: i.productId,
         product_title: i.title,
-        variant_label: i.variantLabel,
+        variant_label: i.variantLabel || null,
         unit_price: i.price,
         quantity: i.quantity,
       }));
-      const { error: itemsErr } = await supabase.from("order_items").insert(orderItems);
-      if (itemsErr) throw itemsErr;
 
-      setOrderId(order.id);
+      const payload = {
+        ...form,
+        subtotal,
+        currency,
+        status: "pending",
+        created_at: new Date().toISOString(), // Fallback
+        order_items: orderItems,
+      };
+
+      const docRef = await addDoc(collection(db, "orders"), payload);
+
+      setOrderId(docRef.id);
       clearCart();
     } catch (err: any) {
       toast.error("Error al procesar pedido", { description: err.message });
