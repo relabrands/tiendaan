@@ -39,8 +39,8 @@ const ProductDetail = () => {
     const selectedOptions = options.map((o) => {
       const selectedValue = selected[o.name];
       const variantValObj = o.values.find(v => v.value === selectedValue);
-      return { 
-        name: o.name, 
+      return {
+        name: o.name,
         value: selectedValue,
         title: variantValObj?.title
       };
@@ -53,8 +53,8 @@ const ProductDetail = () => {
       });
     }
 
-    const productToAdd = selectedVariant?.image_url 
-      ? { ...product, image_url: selectedVariant.image_url } 
+    const productToAdd = selectedVariant?.image_url
+      ? { ...product, image_url: selectedVariant.image_url }
       : product;
     addItem({ product: productToAdd, quantity: 1, selectedOptions });
     toast.success("Añadido al carrito", { description: product.title, position: "top-center" });
@@ -155,9 +155,9 @@ const ProductDetail = () => {
                     <Label htmlFor="customText" className="mb-3 block text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                       Nombre a personalizar (opcional)
                     </Label>
-                    <Input 
-                      id="customText" 
-                      placeholder="Ej. Robinson" 
+                    <Input
+                      id="customText"
+                      placeholder="Ej. Rafael"
                       value={customText}
                       onChange={(e) => setCustomText(e.target.value)}
                       className="max-w-xs"

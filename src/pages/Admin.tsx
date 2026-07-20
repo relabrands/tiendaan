@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProducts } from "@/hooks/useProducts";
 import { formatPrice, slugify, type Product, type VariantOption } from "@/lib/store";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface ProductForm {
   id?: string;
@@ -531,21 +532,65 @@ const OrdersTab = () => {
                     </td>
                   </tr>
                   {expanded === o.id && (
-                    <tr className="bg-muted/20">
-                      <td colSpan={5} className="p-4">
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                          <div className="text-xs">
-                            <p><strong>Email:</strong> {o.customer_email}</p>
-                            <p><strong>Dirección:</strong> {o.address}</p>
-                            {o.notes && <p><strong>Notas:</strong> {o.notes}</p>}
+                    <tr className="bg-muted/10 shadow-inner">
+                      <td colSpan={5} className="p-0">
+                        <div className="grid grid-cols-1 divide-y divide-border/40 md:grid-cols-2 md:divide-x md:divide-y-0">
+                          <div className="p-6 text-sm">
+                            <h4 className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                              Datos del Cliente
+                            </h4>
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Email</p>
+                                <p className="font-medium">{o.customer_email}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Dirección de Entrega</p>
+                                <p className="font-medium">{o.address}</p>
+                              </div>
+                              {o.notes && (
+                                <div className="rounded-md bg-accent/10 p-3">
+                                  <p className="text-xs font-semibold text-accent-foreground">Notas del pedido:</p>
+                                  <p className="mt-1 text-sm italic">{o.notes}</p>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Artículos</p>
-                            <ul className="space-y-1 text-xs">
+                          <div className="p-6">
+                            <h4 className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                              Artículos ({o.order_items?.length || 0})
+                            </h4>
+                            <ul className="space-y-3 text-sm">
                               {o.order_items?.map((it) => (
-                                <li key={it.id} className="flex justify-between">
-                                  <span>{it.quantity}× {it.product_title} {it.variant_label && `(${it.variant_label})`}</span>
-                                  <span>{formatPrice(Number(it.unit_price) * it.quantity, o.currency)}</span>
+                                <li key={it.id} className="flex justify-between gap-4 border-b border-border/40 pb-3 last:border-0 last:pb-0">
+                                  <div className="flex-1">
+                                    <p className="font-semibold text-foreground">
+                                      {it.quantity}× {it.product_title}
+                                    </p>
+                                    {it.variant_label && (
+                                      <div className="mt-2 flex flex-col gap-1.5">
+                                        {it.variant_label.split(" · ").map((label, idx) => {
+                                          const isCustom = label.toLowerCase().includes("personalizaci");
+                                          return (
+                                            <span 
+                                              key={idx} 
+                                              className={cn(
+                                                "inline-block w-fit rounded-md px-2 py-1 text-xs",
+                                                isCustom 
+                                                  ? "bg-accent/20 text-accent-foreground font-medium border border-accent/30" 
+                                                  : "bg-muted text-muted-foreground"
+                                              )}
+                                            >
+                                              {label}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <span className="font-medium text-foreground">
+                                    {formatPrice(Number(it.unit_price) * it.quantity, o.currency)}
+                                  </span>
                                 </li>
                               ))}
                             </ul>

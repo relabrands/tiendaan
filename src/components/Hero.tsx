@@ -27,7 +27,7 @@ export const Hero = () => {
           </div>
 
           <h1 className="font-display text-5xl font-extrabold leading-[0.95] tracking-tight text-balance md:text-7xl lg:text-[5.5rem]">
-            Vístete como{" "}
+            Equípate como{" "}
             <span className="relative inline-block">
               <span className="relative z-10 text-accent">se hacen negocios</span>
               <span className="absolute inset-x-0 bottom-1 h-3 -z-0 bg-accent/15 blur-sm md:bottom-2 md:h-5" />
