@@ -6,6 +6,7 @@ import type { Product } from "@/lib/store";
 export function useProducts(opts: { includeInactive?: boolean } = {}) {
   return useQuery({
     queryKey: ["products", opts.includeInactive ?? false],
+    retry: false,
     queryFn: async (): Promise<Product[]> => {
       let q = query(collection(db, "products"), orderBy("sort_order", "asc"));
       if (!opts.includeInactive) {

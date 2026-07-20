@@ -84,15 +84,13 @@ const Admin = () => {
 const AdminPanel = () => {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { data: products, isLoading } = useProducts({ includeInactive: true });
+  const { data: products, isLoading, error: productsError } = useProducts({ includeInactive: true });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<ProductForm>(emptyForm);
-  const [variantJson, setVariantJson] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
   const openNew = () => {
     setForm(emptyForm);
-    setVariantJson("");
     setDialogOpen(true);
   };
 
@@ -105,36 +103,12 @@ const AdminPanel = () => {
       product_type: p.product_type || "",
       price: p.price,
       image_url: p.image_url || "",
-      variants: p.variants,
+      variants: p.variants || [],
       stock: p.stock,
       is_active: p.is_active,
       sort_order: p.sort_order,
     });
-    setVariantJson(
-      p.variants.length
-        ? p.variants.map((v) => `${v.name}: ${v.values.join(", ")}`).join("\n")
-        : "",
-    );
     setDialogOpen(true);
-  };
-
-  const parseVariants = (text: string): VariantOption[] => {
-    if (!text.trim()) return [];
-    return text
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .map((line) => {
-        const [name, values] = line.split(":");
-        return {
-          name: (name || "").trim(),
-          values: (values || "")
-            .split(",")
-            .map((v) => v.trim())
-            .filter(Boolean),
-        };
-      })
-      .filter((v) => v.name && v.values.length);
   };
 
   const save = async () => {
@@ -147,7 +121,7 @@ const AdminPanel = () => {
       product_type: form.product_type,
       price: form.price,
       image_url: form.image_url || null,
-      variants: parseVariants(variantJson) as any,
+      variants: form.variants as any,
       stock: form.stock,
       is_active: form.is_active,
       sort_order: form.sort_order,
@@ -217,6 +191,12 @@ const AdminPanel = () => {
 
             {isLoading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
+            ) : productsError ? (
+              <div className="rounded-md border border-destructive bg-destructive/10 p-6 text-center text-destructive">
+                <p className="font-bold">Error al cargar inventario</p>
+                <p className="text-sm mt-1">{String(productsError)}</p>
+                <p className="text-xs mt-4">Nota: Si es un error de permisos (missing or insufficient permissions), verifica las Reglas de Firestore.</p>
+              </div>
             ) : (
               <div className="overflow-hidden rounded-md border border-border/60 bg-card">
                 <table className="w-full text-sm">
@@ -309,8 +289,59 @@ const AdminPanel = () => {
               <p className="mt-1 text-xs text-muted-foreground">Deja en blanco para usar la imagen por defecto del slug.</p>
             </div>
             <div>
-              <Label>Variantes (una por línea, formato: Nombre: valor1, valor2)</Label>
-              <Textarea rows={3} value={variantJson} onChange={(e) => setVariantJson(e.target.value)} placeholder="Talla: S, M, L, XL" />
+              <div className="mb-2 flex items-center justify-between">
+                <Label>Variantes (Talla, Color, etc.)</Label>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setForm({ ...form, variants: [...form.variants, { name: "", values: [] }] })}
+                >
+                  <Plus className="mr-1 h-3 w-3" /> Añadir variante
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {form.variants.length === 0 && (
+                  <p className="text-sm text-muted-foreground">Sin variantes configuradas.</p>
+                )}
+                {form.variants.map((v, i) => (
+                  <div key={i} className="flex gap-2 items-start rounded-md border border-border/40 p-3 bg-muted/20">
+                    <div className="flex-1 space-y-2">
+                      <Input 
+                        placeholder="Nombre (ej. Talla)" 
+                        value={v.name}
+                        onChange={(e) => {
+                          const newVariants = [...form.variants];
+                          newVariants[i].name = e.target.value;
+                          setForm({ ...form, variants: newVariants });
+                        }}
+                      />
+                      <Input 
+                        placeholder="Valores separados por coma (S, M, L)" 
+                        value={v.values.join(", ")}
+                        onChange={(e) => {
+                          const newVariants = [...form.variants];
+                          newVariants[i].values = e.target.value.split(",").map(val => val.trim()).filter(Boolean);
+                          setForm({ ...form, variants: newVariants });
+                        }}
+                      />
+                    </div>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => {
+                        const newVariants = [...form.variants];
+                        newVariants.splice(i, 1);
+                        setForm({ ...form, variants: newVariants });
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
@@ -347,8 +378,9 @@ const STATUS_OPTIONS = ["pending", "confirmed", "shipped", "delivered", "cancell
 
 const OrdersTab = () => {
   const qc = useQueryClient();
-  const { data: orders, isLoading } = useQuery({
+  const { data: orders, isLoading, error } = useQuery({
     queryKey: ["orders"],
+    retry: false,
     queryFn: async () => {
       const q = query(collection(db, "orders"), orderBy("created_at", "desc"));
       const snap = await getDocs(q);
