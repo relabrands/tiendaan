@@ -46,6 +46,7 @@ interface ProductForm {
   cost_without_itbis: number;
   itbis_rate: number;
   cost_with_itbis: number;
+  desired_margin_pct: number | "";
   image_url: string;
   variants: VariantOption[];
   stock: number;
@@ -63,6 +64,7 @@ const emptyForm: ProductForm = {
   cost_without_itbis: 0,
   itbis_rate: 18,
   cost_with_itbis: 0,
+  desired_margin_pct: "",
   image_url: "",
   variants: [],
   stock: 0,
@@ -122,16 +124,20 @@ const AdminPanel = () => {
     const costWithout = p.cost_without_itbis || 0;
     const itbisRate = p.itbis_rate ?? 18;
     const costWith = p.cost_with_itbis || (costWithout ? Math.round(costWithout * (1 + itbisRate / 100)) : 0);
+    const price = p.price || 0;
+    const margin = price > 0 && costWith > 0 ? parseFloat((((price - costWith) / price) * 100).toFixed(1)) : "";
+
     setForm({
       id: p.id,
       slug: p.slug,
       title: p.title,
       description: p.description || "",
       product_type: p.product_type || "",
-      price: p.price || 0,
+      price: price,
       cost_without_itbis: costWithout,
       itbis_rate: itbisRate,
       cost_with_itbis: costWith,
+      desired_margin_pct: margin,
       image_url: p.image_url || "",
       variants: p.variants || [],
       stock: p.stock || 0,
@@ -234,9 +240,10 @@ const AdminPanel = () => {
                 <p className="text-xs mt-4">Nota: Si es un error de permisos (missing or insufficient permissions), verifica las Reglas de Firestore.</p>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-md border border-border/60 bg-card">
-                <table className="w-full text-sm">
-                  <thead className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[720px]">
+                    <thead className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
                     <tr>
                       <th className="p-3">Producto</th>
                       <th className="p-3">Tipo</th>
@@ -291,6 +298,7 @@ const AdminPanel = () => {
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
           </TabsContent>
@@ -332,7 +340,17 @@ const AdminPanel = () => {
               </div>
               <div>
                 <Label>Precio de Venta (DOP) *</Label>
-                <Input type="number" min={0} value={form.price} onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })} />
+                <Input 
+                  type="number" 
+                  min={0} 
+                  value={form.price} 
+                  onChange={(e) => {
+                    const newPrice = parseFloat(e.target.value) || 0;
+                    const costWith = form.cost_with_itbis || 0;
+                    const newMargin = newPrice > 0 && costWith > 0 ? parseFloat((((newPrice - costWith) / newPrice) * 100).toFixed(1)) : "";
+                    setForm({ ...form, price: newPrice, desired_margin_pct: newMargin });
+                  }} 
+                />
               </div>
               <div>
                 <Label>Stock</Label>
@@ -345,14 +363,18 @@ const AdminPanel = () => {
             </div>
 
             {/* Accounting / Cost Structure Section */}
-            <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <Calculator className="h-4 w-4 text-accent" />
-                <h4 className="font-display text-sm font-bold text-foreground">Estructura de Costos y Contabilidad</h4>
+            <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calculator className="h-4 w-4 text-accent" />
+                  <h4 className="font-display text-sm font-bold text-foreground">Estructura de Costos y Margen</h4>
+                </div>
+                <span className="text-[11px] text-muted-foreground">Auto-calcula precio según costo y %</span>
               </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
                 <div>
-                  <Label>Costo sin ITBIS (DOP)</Label>
+                  <Label className="text-xs font-medium">Costo s/ ITBIS (DOP)</Label>
                   <Input 
                     type="number" 
                     min={0} 
@@ -363,12 +385,16 @@ const AdminPanel = () => {
                       const costWithout = parseFloat(e.target.value) || 0;
                       const rate = form.itbis_rate || 18;
                       const costWith = Math.round(costWithout * (1 + rate / 100) * 100) / 100;
-                      setForm({ ...form, cost_without_itbis: costWithout, cost_with_itbis: costWith });
+                      let newPrice = form.price;
+                      if (typeof form.desired_margin_pct === "number" && form.desired_margin_pct < 100 && costWith > 0) {
+                        newPrice = Math.round(costWith / (1 - form.desired_margin_pct / 100));
+                      }
+                      setForm({ ...form, cost_without_itbis: costWithout, cost_with_itbis: costWith, price: newPrice });
                     }} 
                   />
                 </div>
                 <div>
-                  <Label>Tasa ITBIS (%)</Label>
+                  <Label className="text-xs font-medium">Tasa ITBIS (%)</Label>
                   <Input 
                     type="number" 
                     min={0} 
@@ -379,12 +405,16 @@ const AdminPanel = () => {
                       const rate = parseFloat(e.target.value) || 0;
                       const costWithout = form.cost_without_itbis || 0;
                       const costWith = Math.round(costWithout * (1 + rate / 100) * 100) / 100;
-                      setForm({ ...form, itbis_rate: rate, cost_with_itbis: costWith });
+                      let newPrice = form.price;
+                      if (typeof form.desired_margin_pct === "number" && form.desired_margin_pct < 100 && costWith > 0) {
+                        newPrice = Math.round(costWith / (1 - form.desired_margin_pct / 100));
+                      }
+                      setForm({ ...form, itbis_rate: rate, cost_with_itbis: costWith, price: newPrice });
                     }} 
                   />
                 </div>
                 <div>
-                  <Label>Costo con ITBIS (DOP)</Label>
+                  <Label className="text-xs font-medium">Costo c/ ITBIS (DOP)</Label>
                   <Input 
                     type="number" 
                     min={0} 
@@ -395,9 +425,42 @@ const AdminPanel = () => {
                       const costWith = parseFloat(e.target.value) || 0;
                       const rate = form.itbis_rate || 18;
                       const costWithout = Math.round((costWith / (1 + rate / 100)) * 100) / 100;
-                      setForm({ ...form, cost_with_itbis: costWith, cost_without_itbis: costWithout });
+                      let newPrice = form.price;
+                      if (typeof form.desired_margin_pct === "number" && form.desired_margin_pct < 100 && costWith > 0) {
+                        newPrice = Math.round(costWith / (1 - form.desired_margin_pct / 100));
+                      }
+                      setForm({ ...form, cost_with_itbis: costWith, cost_without_itbis: costWithout, price: newPrice });
                     }} 
                   />
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-accent">% Margen Deseado</Label>
+                  <div className="relative">
+                    <Input 
+                      type="number" 
+                      min={0}
+                      max={99.9}
+                      step="any"
+                      placeholder="Ej. 25"
+                      className="border-accent/40 bg-accent/10 font-bold focus:border-accent"
+                      value={form.desired_margin_pct} 
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "") {
+                          setForm({ ...form, desired_margin_pct: "" });
+                          return;
+                        }
+                        const marginPct = parseFloat(val) || 0;
+                        const costWith = form.cost_with_itbis || 0;
+                        let newPrice = form.price;
+                        if (marginPct < 100 && costWith > 0) {
+                          newPrice = Math.round(costWith / (1 - marginPct / 100));
+                        }
+                        setForm({ ...form, desired_margin_pct: marginPct, price: newPrice });
+                      }} 
+                    />
+                    <span className="absolute right-3 top-2.5 text-xs text-muted-foreground font-bold">%</span>
+                  </div>
                 </div>
               </div>
 
@@ -424,7 +487,7 @@ const AdminPanel = () => {
                       </p>
                     </div>
                     <div className="rounded-lg bg-background/80 p-2.5 border border-border/50">
-                      <p className="text-muted-foreground font-medium">Margen sobre Venta</p>
+                      <p className="text-muted-foreground font-medium">Margen Real</p>
                       <p className={cn("font-bold mt-0.5", isProfitable ? "text-emerald-600" : "text-destructive")}>
                         {marginPct}%
                       </p>
@@ -646,8 +709,9 @@ const OrdersTab = () => {
           Aún no hay pedidos.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-md border border-border/60 bg-card">
-          <table className="w-full text-sm">
+        <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[680px]">
             <thead className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="p-3">Fecha</th>
@@ -753,6 +817,7 @@ const OrdersTab = () => {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>
