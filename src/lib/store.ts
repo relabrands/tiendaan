@@ -22,6 +22,9 @@ export interface Product {
   description: string | null;
   product_type: string | null;
   price: number;
+  cost_without_itbis?: number;
+  itbis_rate?: number;
+  cost_with_itbis?: number;
   currency: string;
   image_url: string | null;
   images: string[];
